@@ -1,3 +1,6 @@
+streamlit
+groq
+python-dotenv
 python-dotenv
 groq
 AppOpener
@@ -15,3 +18,4 @@ pygame
 edge-tts
 PyQt5
 webdriver-manager
+
