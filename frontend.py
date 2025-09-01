@@ -1,7 +1,7 @@
 import streamlit as st
 import json
 import os
-from chatbot import ChatBot   # Import your backend function
+from Chatbot import ChatBot   # Import your backend function
 
 # ---------------------- Page Config ----------------------
 st.set_page_config(
@@ -220,5 +220,3 @@ if submit_button and user_input:
     st.session_state["messages"].append({"role": "assistant", "content": response})
     
     st.rerun()
-
-
