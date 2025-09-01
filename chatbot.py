@@ -25,10 +25,10 @@ SystemChatBot = [
 
 # Ensure ChatHistory file exists
 try:
-    with open(r"Data/ChatHistory.json", "r") as f:
+    with open(r"ChatHistory.json", "r") as f:
         ChatHistory = load(f)
 except FileNotFoundError:
-    with open(r"Data/ChatHistory.json", "w") as f:
+    with open(r"ChatHistory.json", "w") as f:
         dump([], f)
 
 
@@ -59,7 +59,7 @@ def ChatBot(Query, retry=False):
     """This function sends the user's query to the chatbot and returns the AI's response."""
 
     try:
-        with open(r"Data/ChatHistory.json", "r") as f:
+        with open(r"ChatHistory.json", "r") as f:
             messages = load(f)
 
         messages.append({"role": "user", "content": f"{Query}"})
@@ -85,7 +85,7 @@ def ChatBot(Query, retry=False):
 
         messages.append({"role": "assistant", "content": Answer})
 
-        with open(r"Data/ChatHistory.json", "w") as f:
+        with open(r"ChatHistory.json", "w") as f:
             dump(messages, f, indent=4)
 
         return AnswerModifier(Answer=Answer)
@@ -103,3 +103,4 @@ if __name__ == "__main__":
     while True:
         user_input = input("Enter Your Query: ")
         print(ChatBot(Query=user_input))
+
