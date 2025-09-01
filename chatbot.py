@@ -1,5 +1,5 @@
 from groq import Groq
-from json import load,dump
+from json import load, dump
 import datetime
 from dotenv import dotenv_values
 
@@ -8,7 +8,6 @@ env_vars = dotenv_values(".env")
 Username = env_vars.get("Username")
 Assistentname = env_vars.get("Assistantname")
 GroqAPIKey = env_vars.get("GroqAPIKey")
-
 
 client = Groq(api_key=GroqAPIKey)
 
@@ -24,14 +23,15 @@ SystemChatBot = [
     {"role": "system", "content": System},
 ]
 
+# Ensure ChatHistory file exists
 try:
-    with open(r"ChatHistory.json", "r") as f:  
+    with open(r"Data/ChatHistory.json", "r") as f:
         ChatHistory = load(f)
 except FileNotFoundError:
-    
-    with open(r"ChatHistory.json", "w") as f:
-        dump([],f)
-        
+    with open(r"Data/ChatHistory.json", "w") as f:
+        dump([], f)
+
+
 def RealtimeInformation():
     current_date_time = datetime.datetime.now()
     day = current_date_time.strftime("%A")
@@ -41,11 +41,12 @@ def RealtimeInformation():
     hour = current_date_time.strftime("%H")
     minute = current_date_time.strftime("%M")
     second = current_date_time.strftime("%S")
-    
-    data = f"Please usethis real-time information if needed,\n"
+
+    data = f"Please use this real-time information if needed,\n"
     data += f"Day: {day}\nDate: {date}\nMonth: {month}\nYear: {year}\n"
     data += f"Time: {hour} hours {minute} minutes {second} seconds\n"
     return data
+
 
 def AnswerModifier(Answer):
     lines = Answer.split('\n')
@@ -54,48 +55,51 @@ def AnswerModifier(Answer):
     return modified_answer
 
 
-def ChatBot(Query):
-    """This funcation sends the user's query to the chatbot and returnds the AI's response."""
-    
+def ChatBot(Query, retry=False):
+    """This function sends the user's query to the chatbot and returns the AI's response."""
+
     try:
-        with open(r"ChatHistory.json", "r") as f:
+        with open(r"Data/ChatHistory.json", "r") as f:
             messages = load(f)
+
         messages.append({"role": "user", "content": f"{Query}"})
-        
+
         completion = client.chat.completions.create(
-            model = "llama3-70b-8192",
-            messages = SystemChatBot + [{"role": "user", "content": RealtimeInformation()}]+ messages,
-            max_tokens = 1024,
-            temperature= 0.7,
-            top_p = 1,
-            stream = True,
-            stop= None
-        ) 
-        
-        
+            model="llama-3.1-8b-instant",
+            messages=SystemChatBot
+                     + [{"role": "user", "content": RealtimeInformation()}]
+                     + messages,
+            max_tokens=1024,
+            temperature=0.7,
+            top_p=1,
+            stream=True,
+            stop=None
+        )
+
         Answer = ""
-        
         for chunk in completion:
             if chunk.choices[0].delta.content:
                 Answer += chunk.choices[0].delta.content
-        Answer = Answer.replace("</s>","")
-        
+
+        Answer = Answer.replace("</s>", "")
+
         messages.append({"role": "assistant", "content": Answer})
-        
-        with open(r"ChatHistory.json", "w") as f:
+
+        with open(r"Data/ChatHistory.json", "w") as f:
             dump(messages, f, indent=4)
-            
+
         return AnswerModifier(Answer=Answer)
+
     except Exception as e:
         print(f"Error: {e}")
-        with open(r"ChatHistory.json", "w") as f:
-            dump([], f, indent=4)
-        return ChatBot(Query=Query)  # Retry with the same query if an error occurs
-    
+
+        if not retry:  # Retry only once
+            return ChatBot(Query=Query, retry=True)
+        else:
+            return "Sorry, something went wrong. Please try again later."
+
 
 if __name__ == "__main__":
     while True:
-        user_input = input("Enter Your Query:")
+        user_input = input("Enter Your Query: ")
         print(ChatBot(Query=user_input))
-
-    
